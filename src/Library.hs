@@ -53,7 +53,7 @@ tieneAlgunSabor :: Postre -> Bool
 tieneAlgunSabor = not . null . sabores
 
 estaCongelado :: Postre -> Bool
-estaCongelado = (== 0) . temperatura
+estaCongelado = (<= 0) . temperatura
 
 -- Por ahora existen los siguientes HECHIZOS:
 
@@ -153,9 +153,49 @@ mejorHechizo postre mago = foldl1 (mejorHechizoEntreDos postre) (hechizos mago)
 -- Luego lo que va a ir haciendo el foldl es ir comparando quien es el mejor de los hechizos
 -- entre parejas hasta llegar al final de la lista de hechizos. Obteniendo como resultado mejor hechizo!!
 
+esMejor :: Postre -> Hechizo -> Hechizo -> Bool
+esMejor postre hechizo1 hechizo2 = (length . sabores . hechizo1) postre >= (length . sabores . hechizo2) postre
+
 mejorHechizoEntreDos :: Postre -> Hechizo -> Hechizo -> Hechizo
 mejorHechizoEntreDos postre hechizo1 hechizo2
-    | length (sabores (hechizo1 postre)) >= length (sabores (hechizo2 postre)) = hechizo1
-    | otherwise                                                                = hechizo2    
+    | esMejor postre hechizo1 hechizo2 = hechizo1
+    | otherwise                        = hechizo2    
 
 -- 3. INFINITA MAGIA
+
+-- A) Construir una lista infinita de postres, y construir un mago con infinitos hechizos.
+
+listaInfinitaDePostres :: [Postre]
+listaInfinitaDePostres = bizcochoBorracho : listaInfinitaDePostres
+
+magoInfinito :: Mago
+magoInfinito = UnMago "Mago infinito" hechizosInfinitos 2
+
+hechizosInfinitos :: [Hechizo]
+hechizosInfinitos = cycle [incendio, immobulus]
+
+-- B) Suponiendo que hay una mesa con infinitos postres, y pregunto si algún hechizo los deja listos 
+-- ¿Existe alguna consulta que pueda hacer para que me sepa dar una respuesta? Justificar conceptualmente.
+
+-- > losDejaraListos hechizo listaInfinitaDePostres
+
+-- Como la funcion losDejaraListos evalua toda la lista (debido al all), entonces pueden ocurrir dos situaciones:
+-- Debido a la evaluacion perezosa (lazy evaluation) que utiliza haskell, entonces si hay algun postre de la lista infinita
+-- que NO queda listo luego de realizarle el respectivo hechizo, entonces se detiene el chequeo de la lista (porque ya es 
+-- suficente al haber encontrado un valor que no cumple, asi funciona el all). Otro caso seria si efectivamente todos
+-- los postres quedaron listos, entonces queda ejectuando/chequendo que cada uno de los postres de la lista infinita cumpla
+-- con la condicion (como la lista es infinita entonces nunca para de evaluar)
+
+-- En conclusuion la unica consulta que puedo hacer y me de una respuesta, seria hacer una consulta sobre una lista infinita
+-- sabiendo que uno de los postres NO quedase listo, por lo tanto me otorgaria una respuesta False (ya que hay por lo menos}
+-- uno que NO cumple, NO cumpliendose el all)
+
+-- C) Suponiendo que un mago tiene infinitos hechizos 
+-- ¿Existe algún caso en el que se puede encontrar al mejor hechizo? Justificar conceptualmente.
+
+-- > mejorHechizo postre magoInfinito
+
+-- En este caso no va a encontrar NUNCA el mejor hechizo, aunque haskell trabaje con una evaluacion perezosa (lazy evaluation)
+-- tendra que evaluar/chequear toda la lista de hechizos para obtener un resultado y como la lista es infinita entonces NUNCA
+-- parara de chequear, por lo tanto, nunca terminara de verificar si hay algun mejor hechizo que el siguiente de la lista y asi
+-- sucesivamente con el resto de la lista (algun mejor hechizo que otro)
